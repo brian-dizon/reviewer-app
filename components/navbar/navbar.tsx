@@ -4,9 +4,10 @@ import Link from "next/link";
 import { ModeToggle } from "./darkmode-toggle";
 import { UserButton, SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Layers } from "lucide-react";
+import { Layers } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { MobileMenu } from "./mobile-menu";
 
 export default function NavbarGlobal() {
   const pathname = usePathname();
@@ -16,15 +17,16 @@ export default function NavbarGlobal() {
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-zinc-200 dark:border-zinc-800 bg-white/75 dark:bg-zinc-950/75 backdrop-blur-md">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         {/* Left: Logo */}
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-4 md:gap-8">
           <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight hover:opacity-90 transition-opacity">
             <div className="bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 p-1.5 rounded-lg">
               <Layers className="h-5 w-5" />
             </div>
+            {/* Logo text always visible now */}
             <span className="text-zinc-900 dark:text-zinc-50">
-              <span className="text-primary">Moi</span>.Reviewer
+              <span className="text-primary">Gab.</span>Reviewer
             </span>
           </Link>
 
@@ -56,13 +58,6 @@ export default function NavbarGlobal() {
             </SignedOut>
 
             <SignedIn>
-              {/* Mobile "Create" Icon (Only visible on small screens) */}
-              <Button asChild variant="ghost" size="icon" className="md:hidden text-zinc-500 dark:text-zinc-400">
-                <Link href="/dashboard/create">
-                  <PlusCircle className="h-5 w-5" />
-                </Link>
-              </Button>
-
               {/* Clerk User Button */}
               <UserButton
                 afterSignOutUrl="/"
@@ -73,6 +68,9 @@ export default function NavbarGlobal() {
                 }}
               />
             </SignedIn>
+
+            {/* Mobile Menu (Hamburger) - now on the right */}
+            <MobileMenu />
           </div>
         </div>
       </div>
