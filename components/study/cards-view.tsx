@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { LayoutGrid, Table as TableIcon, Search, ArrowUpDown } from "lucide-react";
+import { LayoutGrid, Table as TableIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,7 +23,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { DeleteCardButton } from "./delete-card-button";
-import { EditCardDialog } from "./edit-card-dialog"; // Import Edit Dialog
+import { EditCardDialog } from "./edit-card-dialog";
 
 // Define the shape of a Card
 type CardType = {
@@ -37,10 +37,11 @@ type CardType = {
 interface CardsViewProps {
   cards: CardType[];
   isOwner: boolean;
+  defaultView?: "grid" | "table"; // New prop
 }
 
-export default function CardsView({ cards, isOwner }: CardsViewProps) {
-  const [view, setView] = useState<"grid" | "table">("grid");
+export default function CardsView({ cards, isOwner, defaultView = "grid" }: CardsViewProps) {
+  const [view, setView] = useState<"grid" | "table">(defaultView);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("newest");
 
@@ -98,10 +99,7 @@ export default function CardsView({ cards, isOwner }: CardsViewProps) {
         <div className="flex items-center gap-2 w-full md:w-auto">
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className="w-[140px] bg-white dark:bg-zinc-900/50">
-              <div className="flex items-center gap-2 text-zinc-500">
-                <ArrowUpDown className="h-3.5 w-3.5" />
-                <SelectValue placeholder="Sort" />
-              </div>
+              <SelectValue placeholder="Sort" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="newest">Default</SelectItem>
@@ -219,6 +217,12 @@ export default function CardsView({ cards, isOwner }: CardsViewProps) {
               </TableBody>
             </Table>
           </div>
+        </div>
+      )}
+      
+      {filteredCards.length === 0 && searchQuery && (
+        <div className="text-center py-12 text-zinc-500">
+          No cards found matching "{searchQuery}"
         </div>
       )}
     </div>

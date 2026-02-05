@@ -1,16 +1,18 @@
 "use client";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, X, RotateCcw, Trophy } from "lucide-react";
+import { Check, X, RotateCcw, Trophy, Eye, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { Button } from "../ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "../ui/card";
+import CardsView from "./cards-view"; // Import the view
 
 interface CardData {
   id: string;
   question: string;
   answer: string;
+  difficulty: "EASY" | "MODERATE" | "HARD";
 }
 
 interface StudySessionProps {
@@ -22,7 +24,9 @@ export default function StudySession({ deckTitle, cards }: StudySessionProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
-  const [correctCount, setCorrectCount] = useState(0); // Track score
+  const [correctCount, setCorrectCount] = useState(0);
+  const [incorrectCards, setIncorrectCards] = useState<CardData[]>([]); // Track incorrect
+  const [showReport, setShowReport] = useState(false); // Toggle for report view
 
   const currentCard = cards[currentIndex];
   const progress = ((currentIndex + 1) / cards.length) * 100;
@@ -30,11 +34,12 @@ export default function StudySession({ deckTitle, cards }: StudySessionProps) {
   function handleAnswer(isCorrect: boolean) {
     if (isCorrect) {
       setCorrectCount((prev) => prev + 1);
+    } else {
+      setIncorrectCards((prev) => [...prev, currentCard]); // Add to incorrect list
     }
 
     if (currentIndex < cards.length - 1) {
       setIsFlipped(false);
-      // Small delay to allow flip animation before changing content
       setTimeout(() => {
         setCurrentIndex((prev) => prev + 1);
       }, 150);
@@ -48,40 +53,66 @@ export default function StudySession({ deckTitle, cards }: StudySessionProps) {
     setIsFlipped(false);
     setIsFinished(false);
     setCorrectCount(0);
+    setIncorrectCards([]);
+    setShowReport(false);
   }
 
   if (isFinished) {
     const percentage = Math.round((correctCount / cards.length) * 100);
 
+    if (showReport) {
+      return (
+        <div className="max-w-7xl mx-auto p-6 space-y-8 min-h-[70vh]">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">Session Report</h2>
+              <p className="text-zinc-500">Reviewing {incorrectCards.length} incorrect cards.</p>
+            </div>
+            <Button variant="outline" onClick={() => setShowReport(false)}>
+              Back to Score
+            </Button>
+          </div>
+
+          <CardsView
+            cards={incorrectCards}
+            isOwner={false} // Report mode is read-only-ish (or editable if you prefer)
+            defaultView="table" // Default to Table
+          />
+        </div>
+      );
+    }
+
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] space-y-8 p-6 text-center">
-        <motion.div 
-          initial={{ scale: 0, rotate: -180 }} 
-          animate={{ scale: 1, rotate: 0 }} 
-          className="bg-zinc-100 dark:bg-zinc-900 p-8 rounded-full shadow-xl"
-        >
+        <motion.div initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }} className="bg-zinc-100 dark:bg-zinc-900 p-8 rounded-full shadow-xl">
           <Trophy className="w-16 h-16 text-yellow-500" />
         </motion.div>
 
         <div className="space-y-4">
           <h2 className="text-4xl font-bold tracking-tight">Session Complete!</h2>
           <div className="space-y-1">
-             <p className="text-6xl font-black text-zinc-900 dark:text-zinc-50 tracking-tighter">
-              {percentage}%
-            </p>
+            <p className="text-6xl font-black text-zinc-900 dark:text-zinc-50 tracking-tighter">{percentage}%</p>
             <p className="text-zinc-500 font-medium">
               You got {correctCount} out of {cards.length} correct
             </p>
           </div>
         </div>
-        
-        <div className="flex gap-4 pt-8 w-full max-w-sm">
-          <Button variant="outline" className="flex-1 h-12" onClick={resetSession}>
-            <RotateCcw className="mr-2 h-4 w-4" /> Restart
-          </Button>
-          <Button className="flex-1 h-12" asChild>
-            <Link href="/dashboard">Dashboard</Link>
-          </Button>
+
+        <div className="flex flex-col w-full max-w-sm gap-3 pt-4">
+          {incorrectCards.length > 0 && (
+            <Button variant="secondary" className="h-12 w-full" onClick={() => setShowReport(true)}>
+              <AlertCircle className="mr-2 h-4 w-4" /> Review {incorrectCards.length} Incorrect Cards
+            </Button>
+          )}
+
+          <div className="flex gap-3">
+            <Button variant="outline" className="flex-1 h-12" onClick={resetSession}>
+              <RotateCcw className="mr-2 h-4 w-4" /> Restart
+            </Button>
+            <Button className="flex-1 h-12" asChild>
+              <Link href="/dashboard">Dashboard</Link>
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -103,12 +134,7 @@ export default function StudySession({ deckTitle, cards }: StudySessionProps) {
       {/* 2. The Card (Center) */}
       <div className="flex-1 flex items-center justify-center perspective-1000">
         <div className="relative w-full aspect-[4/5] cursor-pointer group" onClick={() => setIsFlipped(!isFlipped)}>
-          <motion.div 
-            className="w-full h-full relative preserve-3d" 
-            initial={false} 
-            animate={{ rotateY: isFlipped ? 180 : 0 }} 
-            transition={{ duration: 0.6, type: "spring", stiffness: 260, damping: 20 }}
-          >
+          <motion.div className="w-full h-full relative preserve-3d" initial={false} animate={{ rotateY: isFlipped ? 180 : 0 }} transition={{ duration: 0.6, type: "spring", stiffness: 260, damping: 20 }}>
             {/* Front Side */}
             <Card className="absolute inset-0 backface-hidden flex flex-col items-center justify-center p-8 text-center border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xl rounded-3xl">
               <span className="absolute top-8 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">Question</span>
@@ -129,38 +155,18 @@ export default function StudySession({ deckTitle, cards }: StudySessionProps) {
       <div className="h-32 flex flex-col justify-end gap-4 pb-8">
         <AnimatePresence mode="wait">
           {!isFlipped ? (
-            <motion.div 
-              key="reveal-btn" 
-              initial={{ opacity: 0, y: 20 }} 
-              animate={{ opacity: 1, y: 0 }} 
-              exit={{ opacity: 0, y: -20 }}
-            >
+            <motion.div key="reveal-btn" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
               <Button size="lg" className="w-full h-16 text-lg rounded-2xl shadow-lg font-semibold tracking-wide" onClick={() => setIsFlipped(true)}>
                 Reveal Answer
               </Button>
             </motion.div>
           ) : (
-            <motion.div 
-              key="answer-btns" 
-              initial={{ opacity: 0, y: 20 }} 
-              animate={{ opacity: 1, y: 0 }} 
-              exit={{ opacity: 0, y: -20 }} 
-              className="grid grid-cols-2 gap-4"
-            >
-              <Button 
-                size="lg" 
-                variant="outline"
-                className="h-16 text-lg rounded-2xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-900/30 dark:text-red-400 dark:hover:bg-red-900/10" 
-                onClick={() => handleAnswer(false)}
-              >
+            <motion.div key="answer-btns" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="grid grid-cols-2 gap-4">
+              <Button size="lg" variant="outline" className="h-16 text-lg rounded-2xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-900/30 dark:text-red-400 dark:hover:bg-red-900/10" onClick={() => handleAnswer(false)}>
                 <X className="mr-2 h-6 w-6" /> Incorrect
               </Button>
 
-              <Button 
-                size="lg" 
-                className="h-16 text-lg rounded-2xl bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-200 dark:shadow-none" 
-                onClick={() => handleAnswer(true)}
-              >
+              <Button size="lg" className="h-16 text-lg rounded-2xl bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-200 dark:shadow-none" onClick={() => handleAnswer(true)}>
                 <Check className="mr-2 h-6 w-6" /> Correct
               </Button>
             </motion.div>
