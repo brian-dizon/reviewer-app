@@ -23,6 +23,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { DeleteCardButton } from "./delete-card-button";
+import { EditCardDialog } from "./edit-card-dialog"; // Import Edit Dialog
 
 // Define the shape of a Card
 type CardType = {
@@ -30,7 +31,7 @@ type CardType = {
   question: string;
   answer: string;
   difficulty: "EASY" | "HARD";
-  createdAt?: Date; // Optional for now
+  createdAt?: Date;
 };
 
 interface CardsViewProps {
@@ -41,13 +42,11 @@ interface CardsViewProps {
 export default function CardsView({ cards, isOwner }: CardsViewProps) {
   const [view, setView] = useState<"grid" | "table">("grid");
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState("newest"); // newest, oldest, difficulty_hard, difficulty_easy
+  const [sortBy, setSortBy] = useState("newest");
 
-  // Filter and Sort Logic
   const filteredCards = useMemo(() => {
     let result = [...cards];
 
-    // 1. Filter
     if (searchQuery) {
       const lowerQuery = searchQuery.toLowerCase();
       result = result.filter(
@@ -57,20 +56,16 @@ export default function CardsView({ cards, isOwner }: CardsViewProps) {
       );
     }
 
-    // 2. Sort
     result.sort((a, b) => {
       switch (sortBy) {
         case "difficulty_hard":
-          // HARD comes before EASY
           return a.difficulty === "HARD" ? -1 : 1;
         case "difficulty_easy":
-          // EASY comes before HARD
           return a.difficulty === "EASY" ? -1 : 1;
         case "alphabetical":
           return a.question.localeCompare(b.question);
         case "newest":
         default:
-          // Default order (usually creation order from DB)
           return 0; 
       }
     });
@@ -91,7 +86,6 @@ export default function CardsView({ cards, isOwner }: CardsViewProps) {
     <div className="space-y-6">
       {/* Controls Bar */}
       <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
-        {/* Search */}
         <div className="relative w-full md:max-w-sm">
           <Input
             placeholder="Search cards..."
@@ -101,9 +95,7 @@ export default function CardsView({ cards, isOwner }: CardsViewProps) {
           />
         </div>
 
-        {/* Right Side: Sort & View Toggle */}
         <div className="flex items-center gap-2 w-full md:w-auto">
-          {/* Sort Dropdown */}
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className="w-[140px] bg-white dark:bg-zinc-900/50">
               <div className="flex items-center gap-2 text-zinc-500">
@@ -119,7 +111,6 @@ export default function CardsView({ cards, isOwner }: CardsViewProps) {
             </SelectContent>
           </Select>
 
-          {/* View Toggle */}
           <div className="flex items-center p-1 bg-zinc-100/80 dark:bg-zinc-800/50 rounded-lg border border-zinc-200 dark:border-zinc-800/50">
             <Button
               variant="ghost"
@@ -162,7 +153,12 @@ export default function CardsView({ cards, isOwner }: CardsViewProps) {
                 <CardTitle className="text-sm font-medium text-zinc-500 uppercase tracking-wider pt-1">
                   Question
                 </CardTitle>
-                {isOwner && <DeleteCardButton cardId={card.id} />}
+                {isOwner && (
+                  <div className="flex items-center">
+                    <EditCardDialog card={card} />
+                    <DeleteCardButton cardId={card.id} />
+                  </div>
+                )}
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-lg font-medium text-zinc-900 dark:text-zinc-100 line-clamp-3">
@@ -193,7 +189,7 @@ export default function CardsView({ cards, isOwner }: CardsViewProps) {
                   <TableHead className="min-w-[200px] h-12 px-4">Question</TableHead>
                   <TableHead className="min-w-[200px] h-12 px-4">Answer</TableHead>
                   <TableHead className="w-[120px] h-12 px-4">Difficulty</TableHead>
-                  {isOwner && <TableHead className="w-[80px] h-12 px-4 text-right">Actions</TableHead>}
+                  {isOwner && <TableHead className="w-[100px] h-12 px-4 text-right">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -212,7 +208,10 @@ export default function CardsView({ cards, isOwner }: CardsViewProps) {
                     </TableCell>
                     {isOwner && (
                       <TableCell className="text-right align-top p-4">
-                        <DeleteCardButton cardId={card.id} />
+                        <div className="flex justify-end items-center">
+                          <EditCardDialog card={card} />
+                          <DeleteCardButton cardId={card.id} />
+                        </div>
                       </TableCell>
                     )}
                   </TableRow>
@@ -220,12 +219,6 @@ export default function CardsView({ cards, isOwner }: CardsViewProps) {
               </TableBody>
             </Table>
           </div>
-        </div>
-      )}
-      
-      {filteredCards.length === 0 && searchQuery && (
-        <div className="text-center py-12 text-zinc-500">
-          No cards found matching "{searchQuery}"
         </div>
       )}
     </div>

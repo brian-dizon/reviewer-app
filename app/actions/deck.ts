@@ -87,6 +87,36 @@ export async function createCard(input: z.infer<typeof flashcardSchema>, deckId:
   }
 }
 
+export async function updateCard(cardId: string, input: z.infer<typeof flashcardSchema>) {
+  const { userId } = await auth();
+  if (!userId) return { error: "Unauthorized" };
+
+  const isAdmin = await checkAdmin();
+  const card = await prisma.flashcard.findUnique({
+    where: { id: cardId },
+    include: { deck: true },
+  });
+
+  if (!card || (card.deck.userId !== userId && !isAdmin)) {
+    return { error: "You do not have permission to edit this card." };
+  }
+
+  const validatedFields = flashcardSchema.safeParse(input);
+  if (!validatedFields.success) return { error: "Invalid data" };
+
+  try {
+    await prisma.flashcard.update({
+      where: { id: cardId },
+      data: validatedFields.data,
+    });
+
+    revalidatePath(`/study/${card.deck.id}`);
+    return { success: true };
+  } catch (err) {
+    return { error: "Failed to update card." };
+  }
+}
+
 export async function deleteCard(cardId: string) {
   const { userId } = await auth();
   if (!userId) return { error: "Unauthorized" };

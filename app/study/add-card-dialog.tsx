@@ -1,10 +1,6 @@
 "use client";
 
-import { flashcardSchema } from "@/lib/validations/schemas";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { createCard } from "../actions/deck";
 import {
   Dialog,
@@ -16,47 +12,19 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"; // Added Select imports
+import { CardForm } from "@/components/card-form";
 
 export default function AddCardDialog({ deckId }: { deckId: string }) {
   const [open, setOpen] = useState<boolean>(false);
-  const [serverError, setServerError] = useState<string | null>(null);
 
-  const form = useForm({
-    resolver: zodResolver(flashcardSchema),
-    defaultValues: {
-      question: "",
-      answer: "",
-      difficulty: "EASY" as const,
-    },
-  });
-
-  async function onSubmit(values: z.infer<typeof flashcardSchema>) {
-    setServerError(null);
+  async function handleCreate(values: any) {
     const result = await createCard(values, deckId);
 
-    if (result.error) {
-      setServerError(result.error);
-    } else {
+    if (result.success) {
       setOpen(false);
-      form.reset();
+      return { success: true };
     }
+    return { error: result.error };
   }
 
   return (
@@ -75,79 +43,7 @@ export default function AddCardDialog({ deckId }: { deckId: string }) {
           </DialogDescription>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Question Field */}
-            <FormField
-              control={form.control}
-              name="question"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Question (Front)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter a concept or a question here." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Answer Field */}
-            <FormField
-              control={form.control}
-              name="answer"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Answer (Back)</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Enter the answer or explanation here."
-                      className="resize-none min-h-[100px]"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Difficulty Field */}
-            <FormField
-              control={form.control}
-              name="difficulty"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Difficulty</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select difficulty" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="EASY">Easy</SelectItem>
-                      <SelectItem value="HARD">Hard</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {serverError && (
-              <p className="text-sm font-medium text-red-500 text-center">{serverError}</p>
-            )}
-
-            <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Saving..." : "Save Card"}
-              </Button>
-            </div>
-          </form>
-        </Form>
+        <CardForm onSubmit={handleCreate} submitLabel="Save Card" />
       </DialogContent>
     </Dialog>
   );
