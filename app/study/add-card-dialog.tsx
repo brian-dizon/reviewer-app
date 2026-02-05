@@ -26,6 +26,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"; // Added Select imports
 
 export default function AddCardDialog({ deckId }: { deckId: string }) {
   const [open, setOpen] = useState<boolean>(false);
@@ -36,7 +43,7 @@ export default function AddCardDialog({ deckId }: { deckId: string }) {
     defaultValues: {
       question: "",
       answer: "",
-      difficulty: "EASY",
+      difficulty: "EASY" as const,
     },
   });
 
@@ -99,6 +106,29 @@ export default function AddCardDialog({ deckId }: { deckId: string }) {
                       {...field}
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Difficulty Field */}
+            <FormField
+              control={form.control}
+              name="difficulty"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Difficulty</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select difficulty" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="EASY">Easy</SelectItem>
+                      <SelectItem value="HARD">Hard</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

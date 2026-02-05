@@ -1,11 +1,11 @@
 import { prisma } from "@/lib/db";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { Separator } from "@/components/ui/separator";
-import CardsGrid from "../card-grid";
 import BackToDashboard from "@/components/global/back-to-dashboard";
 import DeckIsMissing from "./deck-is-missing";
 import DeckIsPrivate from "./deck-is-private";
 import DeckHero from "./deck-hero";
+import CardsView from "@/components/study/cards-view"; // New View Component
 
 export default async function StudyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: deckId } = await params;
@@ -38,7 +38,7 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-8">
+    <div className="max-w-7xl mx-auto p-6 space-y-8">
       {/* 1. Header Section */}
       <div className="space-y-4">
         <BackToDashboard />
@@ -47,8 +47,8 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
 
       <Separator className="my-6" />
 
-      {/* 2. Cards Grid */}
-      <CardsGrid cards={deck.cards} isOwner={isOwner} />
+      {/* 2. Cards View (Toggle Grid/Table) */}
+      <CardsView cards={deck.cards} isOwner={isOwner} />
     </div>
   );
 }
