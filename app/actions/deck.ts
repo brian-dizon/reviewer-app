@@ -1,5 +1,6 @@
 "use server";
 
+import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import { deckSchema, flashcardSchema } from "@/lib/validations/schemas";
 import { auth } from "@clerk/nextjs/server";
@@ -7,15 +8,12 @@ import { revalidatePath } from "next/cache";
 import z from "zod";
 
 export async function createDeck(input: z.infer<typeof deckSchema>) {
-  // 1. Identify the user
   const { userId } = await auth();
   if (!userId) return { error: "Unauthorized" };
 
-  // 2. Validate the data
   const validatedFields = deckSchema.safeParse(input);
   if (!validatedFields.success) return { error: "Invalid data" };
 
-  // 3. Save to DB
   try {
     await prisma.deck.create({
       data: {
@@ -24,28 +22,23 @@ export async function createDeck(input: z.infer<typeof deckSchema>) {
       },
     });
 
-    // 4. Update the UI
     revalidatePath("/dashboard");
     return { success: true };
   } catch (err) {
-    return { err: "Database error." };
+    return { error: "Database error." };
   }
 }
 
 export async function createCard(input: z.infer<typeof flashcardSchema>, deckId: string) {
-  // 1. Identify the user
   const { userId } = await auth();
   if (!userId) return { error: "Unauthorized" };
 
-  // 2. Check deck and must be owned by the current user
   const deck = await prisma.deck.findUnique({ where: { id: deckId } });
   if (!deck || deck.userId !== userId) return { error: "You must own this deck before you add a card." };
 
-  // 3. Validate the data
   const validatedFields = flashcardSchema.safeParse(input);
   if (!validatedFields.success) return { error: "Invalid data" };
 
-  // 4. Save to DB
   try {
     await prisma.flashcard.create({
       data: {
@@ -54,9 +47,55 @@ export async function createCard(input: z.infer<typeof flashcardSchema>, deckId:
       },
     });
 
-    revalidatePath("/dashboard");
+    revalidatePath(`/study/${deckId}`);
     return { success: true };
   } catch (err) {
-    return { err: "Failed to create a card." };
+    return { error: "Failed to create a card." };
+  }
+}
+
+export async function deleteCard(cardId: string) {
+  const { userId } = await auth();
+  if (!userId) return { error: "Unauthorized" };
+
+  const card = await prisma.flashcard.findUnique({
+    where: { id: cardId },
+    include: { deck: true },
+  });
+
+  if (!card || card.deck.userId !== userId) {
+    return { error: "You do not own this card." };
+  }
+
+  try {
+    await prisma.flashcard.delete({ where: { id: cardId } });
+    revalidatePath(`/study/${card.deck.id}`);
+    return { success: true };
+  } catch (err) {
+    return { error: "Failed to delete card." };
+  }
+}
+
+export async function deleteDeck(deckId: string) {
+  const { userId } = await auth();
+  if (!userId) return { error: "Unauthorized" };
+
+  // Verify ownership
+  const deck = await prisma.deck.findUnique({ where: { id: deckId } });
+  if (!deck || deck.userId !== userId) {
+    return { error: "You can only delete a deck that is yours." };
+  }
+
+  try {
+    const deleted = await prisma.deck.delete({ where: { id: deckId } });
+    revalidatePath("/dashboard");
+    return { success: true, data: deleted };
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        return { success: false, error: "Deck not found." };
+      }
+    }
+    return { success: false, error: "An unexpected error occurred." };
   }
 }

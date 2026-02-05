@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft, UserCircle, Play } from "lucide-react";
 import AddCardDialog from "../add-card-dialog";
+import { DeleteDeckDialog } from "@/components/study/delete-deck-dialog";
+import { DeleteCardButton } from "@/components/study/delete-card-button";
 
 export default async function StudyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: deckId } = await params;
@@ -118,9 +120,14 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
                 </Link>
               </Button>
             )}
+            
             {isOwner && (
-              <div className="w-full sm:w-auto">
-                <AddCardDialog deckId={deckId} />
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <div className="flex-1 sm:flex-none">
+                  <AddCardDialog deckId={deckId} />
+                </div>
+                {/* Delete Deck Button */}
+                <DeleteDeckDialog deckId={deckId} deckTitle={deck.title} />
               </div>
             )}
           </div>
@@ -139,10 +146,11 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {deck.cards.map((card) => (
             <Card key={card.id} className="bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm border-zinc-200 dark:border-zinc-800">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-zinc-500 uppercase tracking-wider">
+              <CardHeader className="pb-2 flex flex-row items-start justify-between space-y-0">
+                <CardTitle className="text-sm font-medium text-zinc-500 uppercase tracking-wider pt-1">
                   Question
                 </CardTitle>
+                {isOwner && <DeleteCardButton cardId={card.id} />}
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-lg font-medium text-zinc-900 dark:text-zinc-100 line-clamp-3">
