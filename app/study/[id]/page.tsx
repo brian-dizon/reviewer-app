@@ -1,14 +1,11 @@
 import { prisma } from "@/lib/db";
 import { auth, clerkClient } from "@clerk/nextjs/server";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { ArrowLeft, UserCircle, Play } from "lucide-react";
-import AddCardDialog from "../add-card-dialog";
-import { DeleteDeckDialog } from "@/components/study/delete-deck-dialog";
-import { DeleteCardButton } from "@/components/study/delete-card-button";
+import CardsGrid from "../card-grid";
+import BackToDashboard from "@/components/global/back-to-dashboard";
+import DeckIsMissing from "./deck-is-missing";
+import DeckIsPrivate from "./deck-is-private";
+import DeckHero from "./deck-hero";
 
 export default async function StudyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: deckId } = await params;
@@ -16,42 +13,15 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
 
   const deck = await prisma.deck.findUnique({
     where: { id: deckId },
-    select: {
-      id: true,
-      title: true,
-      subject: true,
-      description: true,
-      visibility: true,
-      userId: true,
-      cards: true,
-    },
+    include: { cards: true },
   });
 
-  if (!deck) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] text-zinc-500">
-        <h2 className="text-xl font-semibold">Deck not found</h2>
-        <Button variant="link" asChild>
-          <Link href="/dashboard">Return to Dashboard</Link>
-        </Button>
-      </div>
-    );
-  }
+  if (!deck) return <DeckIsMissing />;
 
   const isOwner = deck.userId === deckUserId;
   const isPublic = deck.visibility === "PUBLIC";
 
-  if (!isOwner && !isPublic) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] text-zinc-500">
-        <h2 className="text-xl font-semibold">Private Deck</h2>
-        <p>You do not have permission to view this content.</p>
-        <Button variant="link" asChild>
-          <Link href="/dashboard">Return to Dashboard</Link>
-        </Button>
-      </div>
-    );
-  }
+  if (!isOwner && !isPublic) return <DeckIsPrivate />;
 
   // Fetch Author Details
   const client = await clerkClient();
@@ -71,100 +41,14 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
     <div className="max-w-5xl mx-auto p-6 space-y-8">
       {/* 1. Header Section */}
       <div className="space-y-4">
-        <Button variant="ghost" size="sm" className="-ml-2 text-zinc-500" asChild>
-          <Link href="/dashboard">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
-          </Link>
-        </Button>
-
-        <div className="flex flex-col md:flex-row justify-between items-start gap-6">
-          {/* Left Side: Info */}
-          <div className="space-y-2 flex-1">
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-                {deck.title}
-              </h1>
-              <Badge variant={deck.visibility === "PUBLIC" ? "secondary" : "outline"}>
-                {deck.visibility}
-              </Badge>
-            </div>
-            
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-zinc-500">
-              <div className="flex items-center gap-1.5">
-                <span className="font-medium text-zinc-900 dark:text-zinc-300">{deck.subject}</span>
-              </div>
-              <span className="hidden sm:inline">•</span>
-              <div className="flex items-center gap-1.5">
-                <span>{deck.cards.length} cards</span>
-              </div>
-              <span className="hidden sm:inline">•</span>
-              <div className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-400">
-                <UserCircle className="w-4 h-4" />
-                <span>{authorName}</span>
-              </div>
-            </div>
-
-            {deck.description && (
-              <p className="text-zinc-600 dark:text-zinc-400 max-w-2xl text-sm leading-relaxed mt-2">
-                {deck.description}
-              </p>
-            )}
-          </div>
-
-          {/* Right Side: Action Buttons */}
-          <div className="shrink-0 flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-            {deck.cards.length > 0 && (
-              <Button asChild size="default" className="w-full sm:w-auto px-6 shadow-sm">
-                <Link href={`/study/${deckId}/session`}>
-                  <Play className="mr-2 h-4 w-4 fill-current" /> Start Review
-                </Link>
-              </Button>
-            )}
-            
-            {isOwner && (
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <div className="flex-1 sm:flex-none">
-                  <AddCardDialog deckId={deckId} />
-                </div>
-                {/* Delete Deck Button */}
-                <DeleteDeckDialog deckId={deckId} deckTitle={deck.title} />
-              </div>
-            )}
-          </div>
-        </div>
+        <BackToDashboard />
+        <DeckHero authorName={authorName} deck={deck} deckId={deckId} isOwner={isOwner} />
       </div>
 
       <Separator className="my-6" />
 
       {/* 2. Cards Grid */}
-      {deck.cards.length === 0 ? (
-        <div className="text-center py-12 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-lg">
-          <p className="text-zinc-500">This deck is empty.</p>
-          {isOwner && <p className="text-sm text-zinc-400 mt-1">Add some cards to get started!</p>}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {deck.cards.map((card) => (
-            <Card key={card.id} className="bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm border-zinc-200 dark:border-zinc-800">
-              <CardHeader className="pb-2 flex flex-row items-start justify-between space-y-0">
-                <CardTitle className="text-sm font-medium text-zinc-500 uppercase tracking-wider pt-1">
-                  Question
-                </CardTitle>
-                {isOwner && <DeleteCardButton cardId={card.id} />}
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-lg font-medium text-zinc-900 dark:text-zinc-100 line-clamp-3">
-                  {card.question}
-                </p>
-                <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800/50">
-                  <p className="text-sm text-zinc-500 mb-1 uppercase tracking-wider text-[10px]">Answer</p>
-                  <p className="text-zinc-700 dark:text-zinc-300 line-clamp-4">{card.answer}</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+      <CardsGrid cards={deck.cards} isOwner={isOwner} />
     </div>
   );
 }
