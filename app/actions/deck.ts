@@ -6,6 +6,7 @@ import { deckSchema, flashcardSchema } from "@/lib/validations/schemas";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import z from "zod";
+import { checkAdmin } from "@/lib/is-admin";
 
 export async function createDeck(input: z.infer<typeof deckSchema>) {
   const { userId } = await auth();
@@ -33,8 +34,13 @@ export async function createCard(input: z.infer<typeof flashcardSchema>, deckId:
   const { userId } = await auth();
   if (!userId) return { error: "Unauthorized" };
 
+  const isAdmin = await checkAdmin();
   const deck = await prisma.deck.findUnique({ where: { id: deckId } });
-  if (!deck || deck.userId !== userId) return { error: "You must own this deck before you add a card." };
+
+  // Allow if Owner OR Admin
+  if (!deck || (deck.userId !== userId && !isAdmin)) {
+    return { error: "You must own this deck before you add a card." };
+  }
 
   const validatedFields = flashcardSchema.safeParse(input);
   if (!validatedFields.success) return { error: "Invalid data" };
@@ -58,12 +64,15 @@ export async function deleteCard(cardId: string) {
   const { userId } = await auth();
   if (!userId) return { error: "Unauthorized" };
 
+  const isAdmin = await checkAdmin();
+
   const card = await prisma.flashcard.findUnique({
     where: { id: cardId },
     include: { deck: true },
   });
 
-  if (!card || card.deck.userId !== userId) {
+  // Allow if Owner OR Admin
+  if (!card || (card.deck.userId !== userId && !isAdmin)) {
     return { error: "You do not own this card." };
   }
 
@@ -80,9 +89,12 @@ export async function deleteDeck(deckId: string) {
   const { userId } = await auth();
   if (!userId) return { error: "Unauthorized" };
 
-  // Verify ownership
+  const isAdmin = await checkAdmin();
+
   const deck = await prisma.deck.findUnique({ where: { id: deckId } });
-  if (!deck || deck.userId !== userId) {
+
+  // Allow if Owner OR Admin
+  if (!deck || (deck.userId !== userId && !isAdmin)) {
     return { error: "You can only delete a deck that is yours." };
   }
 
@@ -92,8 +104,8 @@ export async function deleteDeck(deckId: string) {
     return { success: true, data: deleted };
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2025") {
-        return { success: false, error: "Deck not found." };
+      if (error.code === 'P2025') {
+        return { success: false, error: 'Deck not found.' };
       }
     }
     return { success: false, error: "An unexpected error occurred." };
