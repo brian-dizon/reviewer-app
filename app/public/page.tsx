@@ -1,10 +1,13 @@
 import { prisma } from "@/lib/db";
 import DeckCard from "@/app/dashboard/deck-card";
 import { Globe } from "lucide-react";
+import { checkAdmin } from "@/lib/is-admin";
 
 export default async function PublicLibraryPage() {
+  const isAdmin = await checkAdmin();
+
   const decks = await prisma.deck.findMany({
-    where: { visibility: "PUBLIC" },
+    where: isAdmin ? {} : { visibility: "PUBLIC" },
     orderBy: { createdAt: "desc" },
     include: {
       _count: {
@@ -23,12 +26,8 @@ export default async function PublicLibraryPage() {
             <Globe className="w-4 h-4" />
             <span className="text-xs font-medium uppercase tracking-widest">Community</span>
           </div>
-          <h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Public Library
-          </h1>
-          <p className="text-zinc-500 dark:text-zinc-400 text-lg max-w-2xl">
-            Explore {decks.length} community-created decks. Master new subjects with resources shared by learners worldwide.
-          </p>
+          <h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">Public Library</h1>
+          <p className="text-zinc-500 dark:text-zinc-400 text-lg max-w-2xl">Explore {decks.length} community-created decks. Master new subjects with resources shared by learners worldwide.</p>
         </div>
 
         {/* Content Section */}
