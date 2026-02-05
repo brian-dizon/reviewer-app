@@ -1,11 +1,11 @@
 import { prisma } from "@/lib/db";
-import { auth, clerkClient } from "@clerk/nextjs/server"; // Import clerkClient
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowLeft, UserCircle } from "lucide-react"; // Import User Icon
+import { ArrowLeft, UserCircle, Play } from "lucide-react";
 import AddCardDialog from "../add-card-dialog";
 
 export default async function StudyPage({ params }: { params: Promise<{ id: string }> }) {
@@ -56,7 +56,6 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
   let authorName = "Unknown Author";
   try {
     const author = await client.users.getUser(deck.userId);
-    // Use first name + last name if available, otherwise email
     if (author.firstName || author.lastName) {
       authorName = `${author.firstName || ""} ${author.lastName || ""}`.trim();
     } else {
@@ -80,10 +79,14 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
           {/* Left Side: Info */}
           <div className="space-y-2 flex-1">
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">{deck.title}</h1>
-              <Badge variant={deck.visibility === "PUBLIC" ? "secondary" : "outline"}>{deck.visibility}</Badge>
+              <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+                {deck.title}
+              </h1>
+              <Badge variant={deck.visibility === "PUBLIC" ? "secondary" : "outline"}>
+                {deck.visibility}
+              </Badge>
             </div>
-
+            
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-zinc-500">
               <div className="flex items-center gap-1.5">
                 <span className="font-medium text-zinc-900 dark:text-zinc-300">{deck.subject}</span>
@@ -99,15 +102,28 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
               </div>
             </div>
 
-            {deck.description && <p className="text-zinc-600 dark:text-zinc-400 max-w-2xl text-sm leading-relaxed mt-2">{deck.description}</p>}
+            {deck.description && (
+              <p className="text-zinc-600 dark:text-zinc-400 max-w-2xl text-sm leading-relaxed mt-2">
+                {deck.description}
+              </p>
+            )}
           </div>
 
-          {/* Right Side: Action Button */}
-          {isOwner && (
-            <div className="shrink-0 w-full md:w-auto">
-              <AddCardDialog deckId={deckId} />
-            </div>
-          )}
+          {/* Right Side: Action Buttons */}
+          <div className="shrink-0 flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+            {deck.cards.length > 0 && (
+              <Button asChild size="default" className="w-full sm:w-auto px-6 shadow-sm">
+                <Link href={`/study/${deckId}/session`}>
+                  <Play className="mr-2 h-4 w-4 fill-current" /> Start Review
+                </Link>
+              </Button>
+            )}
+            {isOwner && (
+              <div className="w-full sm:w-auto">
+                <AddCardDialog deckId={deckId} />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -124,10 +140,14 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
           {deck.cards.map((card) => (
             <Card key={card.id} className="bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm border-zinc-200 dark:border-zinc-800">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-zinc-500 uppercase tracking-wider">Question</CardTitle>
+                <CardTitle className="text-sm font-medium text-zinc-500 uppercase tracking-wider">
+                  Question
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-lg font-medium text-zinc-900 dark:text-zinc-100 line-clamp-3">{card.question}</p>
+                <p className="text-lg font-medium text-zinc-900 dark:text-zinc-100 line-clamp-3">
+                  {card.question}
+                </p>
                 <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800/50">
                   <p className="text-sm text-zinc-500 mb-1 uppercase tracking-wider text-[10px]">Answer</p>
                   <p className="text-zinc-700 dark:text-zinc-300 line-clamp-4">{card.answer}</p>

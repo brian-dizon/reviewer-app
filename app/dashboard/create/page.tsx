@@ -26,11 +26,8 @@ export default function CreateDeckPage() {
 
   // 2. Define what happens on Submit
   async function onSubmit(values: z.infer<typeof deckSchema>) {
-    console.log("🚀 Client Data:", values);
-
     setServerError(null);
     const result = await createDeck(values);
-    console.log("📥 Server Result:", result);
 
     if (result.error) {
       setServerError(result.error);
@@ -56,7 +53,6 @@ export default function CreateDeckPage() {
                 control={form.control}
                 name="title"
                 render={({ field }) => {
-                  console.log("🕵️ Field Properties for 'title':", field);
                   return (
                     <FormItem>
                       <FormLabel>Title</FormLabel>

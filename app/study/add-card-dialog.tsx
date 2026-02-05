@@ -55,7 +55,7 @@ export default function AddCardDialog({ deckId }: { deckId: string }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="w-full md:w-auto">
+        <Button variant="outline" className="w-full md:w-auto">
           <Plus className="mr-2 h-4 w-4" /> Add Card
         </Button>
       </DialogTrigger>
