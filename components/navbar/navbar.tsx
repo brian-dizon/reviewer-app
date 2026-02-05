@@ -38,6 +38,9 @@ export default function NavbarGlobal() {
             <Link href="/dashboard/create" className={cn("transition-colors hover:text-zinc-900 dark:hover:text-zinc-50", isActive("/dashboard/create") ? "text-zinc-900 dark:text-zinc-50 font-semibold" : "text-zinc-500 dark:text-zinc-400")}>
               Create Deck
             </Link>
+            <Link href="/public" className={cn("transition-colors hover:text-zinc-900 dark:hover:text-zinc-50", isActive("/dashboard/create") ? "text-zinc-900 dark:text-zinc-50 font-semibold" : "text-zinc-500 dark:text-zinc-400")}>
+              Explore
+            </Link>
           </div>
         </div>
 

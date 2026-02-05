@@ -12,9 +12,9 @@ export default async function HomeHero() {
       <section className="flex-1 flex flex-col items-center justify-center text-center px-4 py-24 space-y-10">
         <div className="space-y-4 max-w-3xl">
           <h1 className="text-5xl sm:text-7xl font-black tracking-tighter text-zinc-900 dark:text-zinc-50">
-            Master any subject, <span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-900 to-zinc-500 dark:from-zinc-100 dark:to-zinc-500">faster.</span>
+            Nail your exams with a review <span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-900 to-zinc-500 dark:from-zinc-100 dark:to-zinc-500">partner.</span>
           </h1>
-          <p className="text-lg sm:text-xl text-zinc-500 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed">The minimalist flashcard tool for serious learners. Distraction-free, mobile-first, and built for speed.</p>
+          <p className="text-lg sm:text-xl text-zinc-500 dark:text-zinc-400 max-w-xl mx-auto leading-relaxed">The minimalist flashcard tool for serious learners. Distraction-free, mobile-first, and built for speed.</p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
