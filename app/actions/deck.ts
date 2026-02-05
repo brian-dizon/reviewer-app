@@ -30,6 +30,34 @@ export async function createDeck(input: z.infer<typeof deckSchema>) {
   }
 }
 
+export async function updateDeck(deckId: string, input: z.infer<typeof deckSchema>) {
+  const { userId } = await auth();
+  if (!userId) return { error: "Unauthorized" };
+
+  const isAdmin = await checkAdmin();
+  const deck = await prisma.deck.findUnique({ where: { id: deckId } });
+
+  if (!deck || (deck.userId !== userId && !isAdmin)) {
+    return { error: "Permission denied." };
+  }
+
+  const validatedFields = deckSchema.safeParse(input);
+  if (!validatedFields.success) return { error: "Invalid data" };
+
+  try {
+    await prisma.deck.update({
+      where: { id: deckId },
+      data: validatedFields.data,
+    });
+
+    revalidatePath(`/study/${deckId}`);
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (err) {
+    return { error: "Failed to update deck." };
+  }
+}
+
 export async function createCard(input: z.infer<typeof flashcardSchema>, deckId: string) {
   const { userId } = await auth();
   if (!userId) return { error: "Unauthorized" };
@@ -37,7 +65,6 @@ export async function createCard(input: z.infer<typeof flashcardSchema>, deckId:
   const isAdmin = await checkAdmin();
   const deck = await prisma.deck.findUnique({ where: { id: deckId } });
 
-  // Allow if Owner OR Admin
   if (!deck || (deck.userId !== userId && !isAdmin)) {
     return { error: "You must own this deck before you add a card." };
   }
@@ -71,7 +98,6 @@ export async function deleteCard(cardId: string) {
     include: { deck: true },
   });
 
-  // Allow if Owner OR Admin
   if (!card || (card.deck.userId !== userId && !isAdmin)) {
     return { error: "You do not own this card." };
   }
@@ -93,7 +119,6 @@ export async function deleteDeck(deckId: string) {
 
   const deck = await prisma.deck.findUnique({ where: { id: deckId } });
 
-  // Allow if Owner OR Admin
   if (!deck || (deck.userId !== userId && !isAdmin)) {
     return { error: "You can only delete a deck that is yours." };
   }

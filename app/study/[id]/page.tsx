@@ -32,7 +32,7 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
   try {
     const client = await clerkClient();
     const author = await client.users.getUser(deck.userId);
-    
+
     if (author.firstName || author.lastName) {
       authorName = `${author.firstName || ""} ${author.lastName || ""}`.trim();
     } else if (author.primaryEmailAddress?.emailAddress) {
@@ -47,7 +47,7 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-8">
+    <div className="max-w-7xl mx-auto p-6 space-y-8">
       {/* 1. Header Section */}
       <div className="space-y-4">
         <BackToDashboard />

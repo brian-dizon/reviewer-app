@@ -1,4 +1,5 @@
 import { DeleteDeckDialog } from "@/components/study/delete-deck-dialog";
+import { EditDeckDialog } from "@/components/study/edit-deck-dialog";
 import { Button } from "@/components/ui/button";
 import { UserCircle, Play } from "lucide-react";
 import AddCardDialog from "../add-card-dialog";
@@ -61,6 +62,10 @@ export default function DeckHero({ authorName, deck, deckId, isOwner }: DeckHero
             <div className="flex-1 sm:flex-none">
               <AddCardDialog deckId={deckId} />
             </div>
+            
+            {/* Edit Button */}
+            <EditDeckDialog deck={deck} />
+
             {/* Delete Deck Button */}
             <DeleteDeckDialog deckId={deckId} deckTitle={deck.title} />
           </div>
