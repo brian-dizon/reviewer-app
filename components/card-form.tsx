@@ -89,6 +89,7 @@ export function CardForm({ defaultValues, onSubmit, submitLabel = "Save" }: Card
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="EASY">Easy</SelectItem>
+                  <SelectItem value="MODERATE">Moderate</SelectItem>
                   <SelectItem value="HARD">Hard</SelectItem>
                 </SelectContent>
               </Select>

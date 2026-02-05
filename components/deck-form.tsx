@@ -5,23 +5,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { deckSchema } from "@/lib/validations/schemas";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 
 type DeckFormData = z.infer<typeof deckSchema>;
@@ -58,21 +45,6 @@ export function DeckForm({ defaultValues, onSubmit, submitLabel = "Save" }: Deck
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        {/* Title */}
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Title</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. Biology 101" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
         {/* Subject */}
         <FormField
           control={form.control}
@@ -82,6 +54,21 @@ export function DeckForm({ defaultValues, onSubmit, submitLabel = "Save" }: Deck
               <FormLabel>Subject</FormLabel>
               <FormControl>
                 <Input placeholder="e.g. Science" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Title */}
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Topic</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g. Biology 101" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -126,9 +113,7 @@ export function DeckForm({ defaultValues, onSubmit, submitLabel = "Save" }: Deck
           )}
         />
 
-        {serverError && (
-          <p className="text-sm font-medium text-red-500 text-center">{serverError}</p>
-        )}
+        {serverError && <p className="text-sm font-medium text-red-500 text-center">{serverError}</p>}
 
         <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
           {form.formState.isSubmitting ? "Saving..." : submitLabel}

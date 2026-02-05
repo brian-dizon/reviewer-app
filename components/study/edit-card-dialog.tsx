@@ -19,7 +19,7 @@ interface EditCardDialogProps {
     id: string;
     question: string;
     answer: string;
-    difficulty: "EASY" | "HARD";
+    difficulty: "EASY" | "MODERATE" | "HARD";
   };
 }
 

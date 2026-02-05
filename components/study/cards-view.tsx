@@ -30,7 +30,7 @@ type CardType = {
   id: string;
   question: string;
   answer: string;
-  difficulty: "EASY" | "HARD";
+  difficulty: "EASY" | "MODERATE" | "HARD";
   createdAt?: Date;
 };
 
